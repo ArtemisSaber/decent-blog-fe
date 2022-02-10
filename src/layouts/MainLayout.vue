@@ -155,11 +155,17 @@ export default defineComponent({
       const account = this.etherAccount[0];
       try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const netId = await this.web3.eth.net.getId();
+        let transactionValue = '0.01';
+        if (netId === 137) {
+          transactionValue = '2';
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const receipt = await this.web3.eth.sendTransaction({
           from: account,
           to: '0xa81e1C83805A9Fc4e4e59522d0d446165fAc5221',
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          value: this.web3.utils.toWei('0.001', 'ether'),
+          value: this.web3.utils.toWei(transactionValue, 'ether'),
         });
         this.txHash = receipt;
       } catch (error) {
