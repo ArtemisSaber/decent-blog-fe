@@ -28,8 +28,9 @@
           v-if="etherAccount.length > 0"
           color="secondary"
           icon="fab fa-ethereum"
-          :label="etherAccount[0]"
-          @click="walletConnect"
+          :label="
+            etherAccount[0].slice(0, 9) + '...' + etherAccount[0].slice(-4)
+          "
         />
         <q-btn
           v-else
@@ -63,7 +64,16 @@
         </q-item>
       </q-list>
     </q-drawer>
-
+    <q-dialog v-model="changeChain">
+      <q-card>
+        <q-card-section>
+          <div class="text-h6">Cannot complete transaction</div>
+        </q-card-section>
+        <q-card-section>
+          Please switch to Ethereum mainnet or Polygon mainnet to continue
+        </q-card-section>
+      </q-card>
+    </q-dialog>
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -123,6 +133,9 @@ export default defineComponent({
       etherAccount: new Array<string>(),
       showBanner: false,
       txHash: '',
+      isCreator: false,
+      creatorPass: '',
+      changeChain: false,
     };
   },
   methods: {
@@ -134,7 +147,10 @@ export default defineComponent({
         this.web3 = new Web3(window.ethereum);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         this.web3.eth.getAccounts().then((accounts: any) => {
-          this.etherAccount = accounts;
+          if (accounts) {
+            this.etherAccount = accounts;
+            this.getCreator();
+          }
         });
       }
     },
@@ -156,9 +172,14 @@ export default defineComponent({
       try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const netId = await this.web3.eth.net.getId();
-        let transactionValue = '0.01';
+        let transactionValue = '0.001';
         if (netId === 137) {
           transactionValue = '2';
+        } else if (netId === 1) {
+          transactionValue = '0.001';
+        } else {
+          this.changeChain = true;
+          return;
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const receipt = await this.web3.eth.sendTransaction({
@@ -168,9 +189,16 @@ export default defineComponent({
           value: this.web3.utils.toWei(transactionValue, 'ether'),
         });
         this.txHash = receipt;
+        console.log(receipt);
+        this.showBanner = true;
       } catch (error) {
         console.error(error);
       }
+    },
+    getCreator() {
+      const pass = 'testPass';
+      this.isCreator = true;
+      this.creatorPass = pass;
     },
   },
   mounted() {
