@@ -1,4 +1,4 @@
-const contractAddress = '0x95487Fb6985AaE06b0e952ec18f1011f258d94CC';
+const contractAddress = '0x2A761CFe9Ef3fc4615dc1EE74438A88D66aFBb6A';
 const chainId = 80001;
 import { abi } from './abi/abi.js';
 export { contractAddress, chainId, abi };

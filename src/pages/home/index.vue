@@ -47,6 +47,7 @@ export default defineComponent({
         skipped: 0,
       },
       blogPost: new Array<{
+        id: string;
         title: string;
         abstract: string;
         bannerImage: string;
@@ -105,13 +106,15 @@ export default defineComponent({
       this.pagination.skipped = blogList[1];
       if (blogList[0].length > 0) {
         this.blogPost = [];
+        const blogIds = blogList[1];
         const blogs = blogList[0];
-        blogs.forEach(async (blog: any) => {
+        blogs.forEach(async (blog: any, index: number) => {
           const getAuthor = await contract.methods
             .getAuthor(blog['authorAddress'])
             .call();
           const author = getAuthor['name'];
           const blogPost = {
+            id: blogIds[index],
             title: blog.title,
             author: author,
             bannerImage: blog.banner,

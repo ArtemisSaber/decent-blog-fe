@@ -175,7 +175,7 @@ export default defineComponent({
         barRef.stop();
         void this.$router.push({
           name: 'blog',
-          params: blogId,
+          params: { id: blogId },
         });
       } else {
         alert('Something went wrong...');
