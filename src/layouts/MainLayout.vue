@@ -1,17 +1,20 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-banner
-      v-show="showBanner"
-      inline-actions
-      rounded
-      class="bg-orange text-white"
-    >
-      Thank you for buying me a coffee! Your transaction hash is: {{ txHash }}
+    <q-dialog v-model="showBanner">
+      <q-card>
+        <q-card-section>
+          <div class="text-h6">Thank you</div>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          Thank you for buying me a coffee! Your transaction hash is:
+          {{ txHash }}
+        </q-card-section>
 
-      <template v-slot:action>
-        <q-btn flat label="Dismiss" @click="showBanner = false" />
-      </template>
-    </q-banner>
+        <q-card-actions align="right">
+          <q-btn flat label="OK" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
     <q-header elevated>
       <q-toolbar>
         <q-btn
@@ -81,7 +84,9 @@
 </template>
 
 <script lang="ts">
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import EssentialLink from 'components/EssentialLink.vue';
+import { abi, contractAddress, chainId } from '../config/index';
 const linksList = [
   {
     title: 'GitHub',
@@ -149,7 +154,6 @@ export default defineComponent({
         this.web3.eth.getAccounts().then((accounts: any) => {
           if (accounts) {
             this.etherAccount = accounts;
-            this.getCreator();
           }
         });
       }
@@ -170,35 +174,32 @@ export default defineComponent({
     async buyMeCoffee() {
       const account = this.etherAccount[0];
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const netId = await this.web3.eth.net.getId();
-        let transactionValue = '0.001';
-        if (netId === 137) {
-          transactionValue = '2';
-        } else if (netId === 1) {
-          transactionValue = '0.001';
-        } else {
+        if (netId !== chainId) {
           this.changeChain = true;
           return;
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const contract = new this.web3.eth.Contract(abi, contractAddress);
+        let transactionValue = await contract.methods.getDonateAmount().call();
+        let ownerAddress = await contract.methods.getOwner().call();
+        // if (netId === 137) {
+        //   transactionValue = '2';
+        // } else {
+        //   this.changeChain = true;
+        //   return;
+        // }
+
         const receipt = await this.web3.eth.sendTransaction({
           from: account,
-          to: '0xa81e1C83805A9Fc4e4e59522d0d446165fAc5221',
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          value: this.web3.utils.toWei(transactionValue, 'ether'),
+          to: ownerAddress,
+          value: transactionValue,
         });
-        this.txHash = receipt;
+        this.txHash = receipt.transactionHash;
         console.log(receipt);
         this.showBanner = true;
       } catch (error) {
         console.error(error);
       }
-    },
-    getCreator() {
-      const pass = 'testPass';
-      this.isCreator = true;
-      this.creatorPass = pass;
     },
   },
   mounted() {
