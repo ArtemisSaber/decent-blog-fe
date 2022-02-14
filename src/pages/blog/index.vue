@@ -54,7 +54,8 @@
 import { defineComponent } from 'vue';
 import sanitizeHtml from 'sanitize-html';
 const Web3 = require('web3/dist/web3.min.js');
-import { abi, contractAddress, chainId } from '../../config/index';
+import { abi, contractConfigs } from '../../config/index';
+import { getContract } from 'src/utils/getContract';
 
 export default defineComponent({
   props: {
@@ -97,13 +98,17 @@ export default defineComponent({
     },
     async getBlog() {
       const netId = await this.web3.eth.net.getId();
-      if (netId !== chainId) {
-        alert('Please connect to the correct network.');
-        return;
-      }
       const barRef = this.$refs['bar'] as any;
       barRef.start();
-      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const contractConfig = getContract(contractConfigs, Number(netId));
+      if (!contractConfig) {
+        alert('Please switch to polygon main net or mumbai test net');
+        return;
+      }
+      const contract = new this.web3.eth.Contract(
+        abi,
+        contractConfig.contractAddress
+      );
       const blogPost = await contract.methods.getPost(this.id).call();
       console.log(blogPost);
       if (blogPost['authorAddress'] === this.etherAccount[0]) {
@@ -125,13 +130,17 @@ export default defineComponent({
     },
     async hideBlog() {
       const netId = await this.web3.eth.net.getId();
-      if (netId !== chainId) {
-        alert('Please connect to the correct network.');
-        return;
-      }
       const barRef = this.$refs['bar'] as any;
       barRef.start();
-      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const contractConfig = getContract(contractConfigs, Number(netId));
+      if (!contractConfig) {
+        alert('Please switch to polygon main net or mumbai test net');
+        return;
+      }
+      const contract = new this.web3.eth.Contract(
+        abi,
+        contractConfig.contractAddress
+      );
       const result = await contract.methods.hidePost(this.id).send({
         from: this.etherAccount[0],
       });
@@ -147,13 +156,17 @@ export default defineComponent({
     },
     async showBlog() {
       const netId = await this.web3.eth.net.getId();
-      if (netId !== chainId) {
-        alert('Please connect to the correct network.');
-        return;
-      }
       const barRef = this.$refs['bar'] as any;
       barRef.start();
-      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const contractConfig = getContract(contractConfigs, Number(netId));
+      if (!contractConfig) {
+        alert('Please switch to polygon main net or mumbai test net');
+        return;
+      }
+      const contract = new this.web3.eth.Contract(
+        abi,
+        contractConfig.contractAddress
+      );
       const result = await contract.methods.showPost(this.restoreBlogId).send({
         from: this.etherAccount[0],
       });

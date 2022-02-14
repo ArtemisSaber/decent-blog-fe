@@ -64,9 +64,10 @@
 </template>
 <script lang="ts">
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { getContract } from 'src/utils/getContract';
 import { defineComponent } from 'vue';
 const Web3 = require('web3/dist/web3.min.js');
-import { abi, contractAddress, chainId } from '../../config/index';
+import { abi, contractConfigs } from '../../config/index';
 export default defineComponent({
   data() {
     return {
@@ -104,21 +105,35 @@ export default defineComponent({
         this.web3.eth.getAccounts().then((accounts: any) => {
           if (accounts) {
             this.etherAccount = accounts;
-            const contract = new this.web3.eth.Contract(abi, contractAddress);
-            contract.methods
-              .getAuthor(accounts[0])
-              .call()
-              .then((author: any) => {
-                console.log('author', author);
-                this.authorForm.name = author['name'];
-                this.authorForm.avatar = author['avatar'];
-                barRef.stop();
-              })
-              .catch((err: any) => {
-                console.log(err);
-                this.addAuthor = true;
-                barRef.stop();
-              });
+            this.web3.eth.net.getId().then((netId: number) => {
+              const contractConfig = getContract(
+                contractConfigs,
+                Number(netId)
+              );
+              if (!contractConfig) {
+                alert('Please switch to polygon main net or mumbai test net');
+                return;
+              }
+              const contract = new this.web3.eth.Contract(
+                abi,
+                contractConfig.contractAddress
+              );
+
+              contract.methods
+                .getAuthor(accounts[0])
+                .call()
+                .then((author: any) => {
+                  console.log('author', author);
+                  this.authorForm.name = author['name'];
+                  this.authorForm.avatar = author['avatar'];
+                  barRef.stop();
+                })
+                .catch((err: any) => {
+                  console.log(err);
+                  this.addAuthor = true;
+                  barRef.stop();
+                });
+            });
           }
         });
       }
@@ -131,11 +146,15 @@ export default defineComponent({
     },
     async createAuthor() {
       const netId = await this.web3.eth.net.getId();
-      if (netId !== chainId) {
-        alert('Please connect to the correct network.');
+      const contractConfig = getContract(contractConfigs, Number(netId));
+      if (!contractConfig) {
+        alert('Please switch to polygon main net or mumbai test net');
         return;
       }
-      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const contract = new this.web3.eth.Contract(
+        abi,
+        contractConfig.contractAddress
+      );
       const donateAmount = await contract.methods.getDonateAmount().call();
       const barRef = this.$refs['bar'] as any;
       barRef.start();
@@ -153,11 +172,15 @@ export default defineComponent({
     },
     async saveBlog() {
       const netId = await this.web3.eth.net.getId();
-      if (netId !== chainId) {
-        alert('Please connect to the correct network.');
+      const contractConfig = getContract(contractConfigs, Number(netId));
+      if (!contractConfig) {
+        alert('Please switch to polygon main net or mumbai test net');
         return;
       }
-      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const contract = new this.web3.eth.Contract(
+        abi,
+        contractConfig.contractAddress
+      );
       const barRef = this.$refs['bar'] as any;
       barRef.start();
       const upload = await contract.methods

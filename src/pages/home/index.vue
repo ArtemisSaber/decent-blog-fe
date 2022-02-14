@@ -30,21 +30,34 @@
         </q-card>
       </div>
     </div>
+    <div class="paginationContainer">
+      <q-pagination
+        v-model="pagination.currentPage"
+        :max="Math.floor(pagination.total / pagination.pageSize) + 1"
+        direction-links
+      />
+    </div>
   </div>
 </template>
 <script lang="ts">
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { defineComponent } from 'vue';
 const Web3 = require('web3/dist/web3.min.js');
-import { abi, contractAddress, chainId } from '../../config/index';
+import { abi, contractConfigs } from '../../config/index';
+import { getContract } from '../../utils/getContract';
 export default defineComponent({
   data() {
     return {
       web3: new Web3(),
       pagination: {
-        currentPage: 0,
+        currentPage: 1,
         pageSize: 9,
+        total: 0,
         skipped: 0,
+      },
+      contractConfig: {
+        contractAddress: '',
+        chainId: 0,
       },
       blogPost: new Array<{
         id: string;
@@ -58,7 +71,7 @@ export default defineComponent({
     };
   },
   methods: {
-    async navToBlog(id: number) {
+    async navToBlog(id: string) {
       try {
         const routePromise = await this.$router.push({
           name: 'blog',
@@ -90,20 +103,25 @@ export default defineComponent({
     },
     async getBlogList() {
       const netId = await this.web3.eth.net.getId();
-      if (netId !== chainId) {
-        alert('Please connect to the correct network.');
+      const contractConfig = getContract(contractConfigs, Number(netId));
+      if (!contractConfig) {
+        alert('Please switch to polygon main net or mumbai test net');
         return;
       }
-      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const contract = new this.web3.eth.Contract(
+        abi,
+        contractConfig.contractAddress
+      );
       const blogList = await contract.methods
         .getPostList(
           this.pagination.pageSize,
-          this.pagination.currentPage,
+          this.pagination.currentPage - 1,
           this.pagination.skipped
         )
         .call();
-      console.log(blogList);
-      this.pagination.skipped = blogList[1];
+      console.info('Bloglist', blogList);
+      this.pagination.skipped = blogList[2];
+      this.pagination.total = blogList[3];
       if (blogList[0].length > 0) {
         this.blogPost = [];
         const blogIds = blogList[1];
@@ -132,6 +150,16 @@ export default defineComponent({
       console.log('done');
     });
   },
+  watch: {
+    pagination: {
+      handler(newVal, oldVal) {
+        if (newVal.currentPage !== oldVal.currentPage) {
+          void this.getBlogList();
+        }
+      },
+      deep: true,
+    },
+  },
 });
 </script>
 <style lang="scss" scoped>
@@ -146,6 +174,12 @@ export default defineComponent({
       background-size: cover;
       background-repeat: no-repeat;
     }
+  }
+  .paginationContainer {
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

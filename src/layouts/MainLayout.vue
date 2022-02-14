@@ -138,7 +138,7 @@
 <script lang="ts">
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import EssentialLink from 'components/EssentialLink.vue';
-import { abi, contractAddress, chainId } from '../config/index';
+import { abi, contractConfigs } from '../config/index';
 const linksList = [
   {
     title: 'GitHub',
@@ -167,6 +167,7 @@ const linksList = [
 ];
 
 import { defineComponent, ref } from 'vue';
+import { getContract } from 'src/utils/getContract';
 const Web3 = require('web3/dist/web3.min.js');
 export default defineComponent({
   name: 'MainLayout',
@@ -234,14 +235,32 @@ export default defineComponent({
       }
     },
     async checkOwner() {
-      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const netId = await this.web3.eth.net.getId();
+      const contractConfig = getContract(contractConfigs, Number(netId));
+      if (!contractConfig) {
+        alert('Please switch to polygon main net or mumbai test net');
+        return;
+      }
+      const contract = new this.web3.eth.Contract(
+        abi,
+        contractConfig.contractAddress
+      );
       const owner = await contract.methods.getOwner().call();
       this.isOwner = owner === this.etherAccount[0];
       const donateAmount = await contract.methods.getDonateAmount().call();
       this.donateAmount = this.web3.utils.fromWei(donateAmount, 'ether');
     },
     async changeDonateAmount() {
-      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const netId = await this.web3.eth.net.getId();
+      const contractConfig = getContract(contractConfigs, Number(netId));
+      if (!contractConfig) {
+        alert('Please switch to polygon main net or mumbai test net');
+        return;
+      }
+      const contract = new this.web3.eth.Contract(
+        abi,
+        contractConfig.contractAddress
+      );
       const donateAmount = this.web3.utils.toWei(
         this.donateAmount.toString(),
         'ether'
@@ -262,11 +281,15 @@ export default defineComponent({
       const account = this.etherAccount[0];
       try {
         const netId = await this.web3.eth.net.getId();
-        if (netId !== chainId) {
+        const contractConfig = getContract(contractConfigs, Number(netId));
+        if (!contractConfig) {
           this.changeChain = true;
           return;
         }
-        const contract = new this.web3.eth.Contract(abi, contractAddress);
+        const contract = new this.web3.eth.Contract(
+          abi,
+          contractConfig.contractAddress
+        );
         let transactionValue = await contract.methods.getDonateAmount().call();
         let ownerAddress = await contract.methods.getOwner().call();
         const receipt = await this.web3.eth.sendTransaction({
