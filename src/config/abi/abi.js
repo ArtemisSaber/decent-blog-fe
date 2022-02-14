@@ -329,6 +329,11 @@ const abi = [
       {
         components: [
           {
+            internalType: 'uint64',
+            name: 'id',
+            type: 'uint64',
+          },
+          {
             internalType: 'string',
             name: 'title',
             type: 'string',
@@ -409,6 +414,11 @@ const abi = [
     outputs: [
       {
         components: [
+          {
+            internalType: 'uint64',
+            name: 'id',
+            type: 'uint64',
+          },
           {
             internalType: 'string',
             name: 'title',

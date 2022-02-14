@@ -7,7 +7,14 @@
       size="10px"
       skip-hijack
     />
-
+    <div class="operations" v-if="isAuthor">
+      <q-btn color="secondary" @click="hideBlog" label="Hide this blog" />
+      <q-btn
+        color="secondary"
+        @click="restoreBlog"
+        label="Show a hidden blog"
+      />
+    </div>
     <div
       class="blog-banner"
       :style="{ backgroundImage: `url(${blogPost.bannerImage})` }"
@@ -19,6 +26,27 @@
       <div class="text-body2" v-html="sanitizedHTML()"></div>
     </div>
     <div class="blog-footer">This blog id is {{ blogPost.id }}</div>
+    <q-dialog v-model="showBlogDialog" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">The blog ID you wish to show</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input
+            dense
+            v-model="restoreBlogId"
+            autofocus
+            @keyup.enter="showBlog"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn flat label="Show blog" @click="showBlog" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -36,6 +64,9 @@ export default defineComponent({
     return {
       web3: new Web3(),
       etherAccount: [],
+      isAuthor: false,
+      showBlogDialog: false,
+      restoreBlogId: 0,
       blogPost: {
         title: '',
         author: '',
@@ -75,6 +106,9 @@ export default defineComponent({
       const contract = new this.web3.eth.Contract(abi, contractAddress);
       const blogPost = await contract.methods.getPost(this.id).call();
       console.log(blogPost);
+      if (blogPost['authorAddress'] === this.etherAccount[0]) {
+        this.isAuthor = true;
+      }
       const getAuthor = await contract.methods
         .getAuthor(blogPost['authorAddress'])
         .call();
@@ -88,6 +122,47 @@ export default defineComponent({
         content: blogPost['content'],
         id: this.id ? this.id : '',
       };
+    },
+    async hideBlog() {
+      const netId = await this.web3.eth.net.getId();
+      if (netId !== chainId) {
+        alert('Please connect to the correct network.');
+        return;
+      }
+      const barRef = this.$refs['bar'] as any;
+      barRef.start();
+      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const result = await contract.methods.hidePost(this.id).send({
+        from: this.etherAccount[0],
+      });
+      barRef.stop();
+      if (result) {
+        alert('Blog has been hidden.');
+      } else {
+        alert('Something went wrong.');
+      }
+    },
+    restoreBlog() {
+      this.showBlogDialog = true;
+    },
+    async showBlog() {
+      const netId = await this.web3.eth.net.getId();
+      if (netId !== chainId) {
+        alert('Please connect to the correct network.');
+        return;
+      }
+      const barRef = this.$refs['bar'] as any;
+      barRef.start();
+      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const result = await contract.methods.showPost(this.restoreBlogId).send({
+        from: this.etherAccount[0],
+      });
+      barRef.stop();
+      if (result) {
+        alert('Blog has been shown.');
+      } else {
+        alert('Something went wrong.');
+      }
     },
   },
   mounted() {
@@ -108,5 +183,11 @@ export default defineComponent({
   padding: 1rem;
   opacity: 0.1;
   text-align: center;
+}
+.operations {
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  justify-content: space-around;
 }
 </style>

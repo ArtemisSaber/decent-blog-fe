@@ -26,7 +26,9 @@
           @click="toggleLeftDrawer"
         />
 
-        <q-toolbar-title> Stellar Saber </q-toolbar-title>
+        <q-toolbar-title @click="goHome" :style="{ cursor: 'pointer' }">
+          Stellar Saber
+        </q-toolbar-title>
         <q-btn
           v-if="etherAccount.length > 0"
           color="secondary"
@@ -55,7 +57,13 @@
           :key="link.title"
           v-bind="link"
         />
-        <q-item clickable tag="span" target="_blank" @click="buyMeCoffee">
+        <q-item
+          v-if="!isOwner"
+          clickable
+          tag="span"
+          target="_blank"
+          @click="buyMeCoffee"
+        >
           <q-item-section avatar>
             <q-icon name="fab fa-ethereum" />
           </q-item-section>
@@ -63,6 +71,24 @@
           <q-item-section>
             <q-item-label>Buy Me a Coffee</q-item-label>
             <q-item-label caption> stellarsaber.nft </q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item
+          v-if="isOwner"
+          clickable
+          tag="span"
+          target="_blank"
+          @click="showChangeDonate"
+        >
+          <q-item-section avatar>
+            <q-icon name="fab fa-ethereum" />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>Change Donate Amount</q-item-label>
+            <q-item-label caption
+              >currentAmount:{{ donateAmount }}</q-item-label
+            >
           </q-item-section>
         </q-item>
       </q-list>
@@ -73,8 +99,34 @@
           <div class="text-h6">Cannot complete transaction</div>
         </q-card-section>
         <q-card-section>
-          Please switch to Ethereum mainnet or Polygon mainnet to continue
+          Please switch to Polygon mainnet to continue
         </q-card-section>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="changeDonate" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">Donate Amount</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input
+            dense
+            v-model="donateAmount"
+            autofocus
+            @keyup.enter="changeDonateAmount"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn
+            flat
+            label="Show blog"
+            @click="changeDonateAmount"
+            v-close-popup
+          />
+        </q-card-actions>
       </q-card>
     </q-dialog>
     <q-page-container>
@@ -138,9 +190,11 @@ export default defineComponent({
       etherAccount: new Array<string>(),
       showBanner: false,
       txHash: '',
-      isCreator: false,
+      isOwner: false,
+      donateAmount: 0,
       creatorPass: '',
       changeChain: false,
+      changeDonate: false,
     };
   },
   methods: {
@@ -154,9 +208,16 @@ export default defineComponent({
         this.web3.eth.getAccounts().then((accounts: any) => {
           if (accounts) {
             this.etherAccount = accounts;
+            void this.checkOwner();
           }
         });
       }
+    },
+    goHome() {
+      if (this.$route.name !== 'home')
+        void this.$router.push({
+          name: 'home',
+        });
     },
     async walletConnect() {
       try {
@@ -166,10 +227,36 @@ export default defineComponent({
         console.log(accounts);
         if (accounts && (accounts as Array<string>).length > 0) {
           this.etherAccount = accounts as Array<string>;
+          void this.checkOwner();
         }
       } catch (error) {
         console.error(error);
       }
+    },
+    async checkOwner() {
+      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const owner = await contract.methods.getOwner().call();
+      this.isOwner = owner === this.etherAccount[0];
+      const donateAmount = await contract.methods.getDonateAmount().call();
+      this.donateAmount = this.web3.utils.fromWei(donateAmount, 'ether');
+    },
+    async changeDonateAmount() {
+      const contract = new this.web3.eth.Contract(abi, contractAddress);
+      const donateAmount = this.web3.utils.toWei(
+        this.donateAmount.toString(),
+        'ether'
+      );
+      const tx = await contract.methods.changeDonateAmount(donateAmount).send({
+        from: this.etherAccount[0],
+      });
+      this.txHash = tx.transactionHash;
+      alert(
+        'Changed donate amount successfully! Transaction hash: ' + this.txHash
+      );
+      void this.checkOwner();
+    },
+    showChangeDonate() {
+      this.changeDonate = true;
     },
     async buyMeCoffee() {
       const account = this.etherAccount[0];
@@ -182,13 +269,6 @@ export default defineComponent({
         const contract = new this.web3.eth.Contract(abi, contractAddress);
         let transactionValue = await contract.methods.getDonateAmount().call();
         let ownerAddress = await contract.methods.getOwner().call();
-        // if (netId === 137) {
-        //   transactionValue = '2';
-        // } else {
-        //   this.changeChain = true;
-        //   return;
-        // }
-
         const receipt = await this.web3.eth.sendTransaction({
           from: account,
           to: ownerAddress,

@@ -23,7 +23,9 @@
       <q-input label="banner image" v-model="bannerImage" />
     </div>
     <q-editor v-model="editorContent" min-height="15rem" />
-    <q-btn color="primary" @click="saveBlog">Save</q-btn>
+    <div class="operations" style="text-align: center; padding: 1rem">
+      <q-btn color="primary" @click="saveBlog">Save</q-btn>
+    </div>
     <q-dialog v-model="addAuthor">
       <q-card>
         <q-card-section>
