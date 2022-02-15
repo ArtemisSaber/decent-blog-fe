@@ -15,7 +15,9 @@
         label="Show a hidden blog"
       />
     </div>
+    <q-skeleton height="150px" v-if="loading" />
     <div
+      v-else
       class="blog-banner"
       :style="{ backgroundImage: `url(${blogPost.bannerImage})` }"
     >
@@ -23,7 +25,8 @@
       <div class="text-subtitle1">{{ blogPost.author }}</div>
     </div>
     <div class="blog-content">
-      <div class="text-body2" v-html="sanitizedHTML()"></div>
+      <q-skeleton height="350px" v-if="loading" />
+      <div v-else class="text-body2" v-html="sanitizedHTML()"></div>
     </div>
     <div class="blog-footer">This blog id is {{ blogPost.id }}</div>
     <q-dialog v-model="showBlogDialog" persistent>
@@ -67,6 +70,7 @@ export default defineComponent({
       etherAccount: [],
       isAuthor: false,
       showBlogDialog: false,
+      loading: false,
       restoreBlogId: 0,
       blogPost: {
         title: '',
@@ -97,6 +101,7 @@ export default defineComponent({
       }
     },
     async getBlog() {
+      this.loading = true;
       const netId = await this.web3.eth.net.getId();
       const barRef = this.$refs['bar'] as any;
       barRef.start();
@@ -127,6 +132,7 @@ export default defineComponent({
         content: blogPost['content'],
         id: this.id ? this.id : '',
       };
+      this.loading = false;
     },
     async hideBlog() {
       const netId = await this.web3.eth.net.getId();
