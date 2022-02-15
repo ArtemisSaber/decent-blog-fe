@@ -120,12 +120,7 @@
 
         <q-card-actions align="right" class="text-primary">
           <q-btn flat label="Cancel" v-close-popup />
-          <q-btn
-            flat
-            label="Show blog"
-            @click="changeDonateAmount"
-            v-close-popup
-          />
+          <q-btn flat label="Save" @click="changeDonateAmount" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>

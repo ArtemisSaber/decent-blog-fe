@@ -2,13 +2,14 @@
   "name": "decent-forum-fe",
   "version": "0.0.1",
   "description": "a decentralized personal blog",
-  "productName": "Decentrailzed Blog",
+  "productName": "Decentralized Blog",
   "author": "星灵之刃 <chenhao.w@gmail.com>",
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.ts,.vue ./",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
-    "test": "echo \"No test specified\" && exit 0"
+    "test": "echo \"No test specified\" && exit 0",
+    "deploy": "push-dir --dir=dist/spa --remote=gh-pages --branch=master"
   },
   "dependencies": {
     "@metamask/providers": "^8.1.1",
@@ -41,7 +42,8 @@
     "eslint": "^7.14.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-vue": "^7.0.0",
-    "prettier": "^2.5.1"
+    "prettier": "^2.5.1",
+    "push-dir": "^0.4.1"
   },
   "browserslist": [
     "last 10 Chrome versions",
