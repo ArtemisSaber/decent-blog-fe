@@ -18,14 +18,20 @@
             <div class="text-subtitle2">{{ `by ${blog.author}` }}</div>
           </q-card-section>
           <q-card-section>
-            {{ `${blog.abstract}...` }}
+            <div class="abstractContent">
+              {{ `${blog.abstract}...` }}
+            </div>
           </q-card-section>
         </q-card>
       </div>
       <div class="col-md-4 col-sm-6 col-xs-12 blog-card-container">
-        <q-card :class="`bg-light-blue-8 blog-card`" @click="navToEdit">
+        <q-card
+          :class="`bg-light-blue-8 blog-card edit-card`"
+          @click="navToEdit"
+        >
           <q-card-section style="text-align: center">
             <q-icon name="add" size="5rem" />
+            <div class="text-subtitle2">Add a new blog</div>
           </q-card-section>
         </q-card>
       </div>
@@ -169,10 +175,20 @@ export default defineComponent({
     padding: 1rem;
     .blog-card {
       cursor: pointer;
-    }
-    .titleContainer {
-      background-size: cover;
-      background-repeat: no-repeat;
+      .titleContainer {
+        background-size: cover;
+        background-repeat: no-repeat;
+        height: 5rem;
+      }
+      .abstractContent {
+        height: 10rem;
+      }
+      &.edit-card {
+        height: 15rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
     }
   }
   .paginationContainer {
