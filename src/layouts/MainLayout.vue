@@ -48,7 +48,7 @@
     </q-header>
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <q-img src="~assets/image/sorey.jpg" :ratio="21 / 9" />
+      <q-img src="~assets/image/banner.png" :ratio="21 / 9" />
       <q-list>
         <q-item-label header> About Me </q-item-label>
 
