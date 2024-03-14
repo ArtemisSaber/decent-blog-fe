@@ -24,7 +24,10 @@
     </div>
     <q-editor v-model="editorContent" min-height="15rem" />
     <div class="operations" style="text-align: center; padding: 1rem">
-      <q-btn color="primary" @click="saveBlog">Save</q-btn>
+      <q-btn color="primary" @click="saveBlog" style="margin-right: 8px"
+        >Save</q-btn
+      >
+      <q-btn label="Cancel" color="secondary" @click="goback" />
     </div>
     <q-dialog v-model="addAuthor">
       <q-card>
@@ -143,6 +146,9 @@ export default defineComponent({
         name: '',
         avatar: '',
       };
+    },
+    goback() {
+      this.$router.back();
     },
     async createAuthor() {
       const netId = await this.web3.eth.net.getId();

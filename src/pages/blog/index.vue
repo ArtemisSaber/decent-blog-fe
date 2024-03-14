@@ -19,10 +19,13 @@
     <div
       v-else
       class="blog-banner"
-      :style="{ backgroundImage: `url(${blogPost.bannerImage})` }"
+      :style="{
+        backgroundImage: `url(${blogPost.bannerImage})`,
+        color: '#FFF',
+      }"
     >
-      <div class="text-h2">{{ blogPost.title }}</div>
-      <div class="text-subtitle1">{{ blogPost.author }}</div>
+      <div class="text-h2 texts">{{ blogPost.title }}</div>
+      <div class="text-subtitle1 texts">{{ blogPost.author }}</div>
     </div>
     <div class="blog-content">
       <q-skeleton height="350px" v-if="loading" />
@@ -208,5 +211,8 @@ export default defineComponent({
   text-align: center;
   display: flex;
   justify-content: space-around;
+}
+.texts {
+  mix-blend-mode: difference;
 }
 </style>

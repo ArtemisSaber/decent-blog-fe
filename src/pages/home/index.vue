@@ -6,30 +6,16 @@
         :key="index"
         class="col-md-4 col-sm-6 col-xs-12 blog-card-container"
       >
-        <q-card
-          :class="`bg-${blog.backgroundColor} blog-card`"
-          @click="navToBlog(blog.id)"
-        >
-          <q-card-section
-            class="titleContainer"
-            :style="{ backgroundImage: `url(${blog.bannerImage})` }"
-          >
-            <div class="text-h6">{{ blog.title }}</div>
-            <div class="text-subtitle2">{{ `by ${blog.author}` }}</div>
-          </q-card-section>
-          <q-card-section>
-            <div class="abstractContent">
-              {{ `${blog.abstract}...` }}
-            </div>
-          </q-card-section>
-        </q-card>
+        <BlogCard :blog="blog" @clickCard="navToBlog" />
       </div>
       <div class="col-md-4 col-sm-6 col-xs-12 blog-card-container">
         <q-card
           :class="`bg-light-blue-8 blog-card edit-card`"
           @click="navToEdit"
         >
-          <q-card-section style="text-align: center">
+          <q-card-section
+            style="text-align: center; color: #fff; mix-blend-mode: difference"
+          >
             <q-icon name="add" size="5rem" />
             <div class="text-subtitle2">Add a new blog</div>
           </q-card-section>
@@ -51,7 +37,12 @@ import { defineComponent } from 'vue';
 const Web3 = require('web3/dist/web3.min.js');
 import { abi, contractConfigs } from '../../config/index';
 import { getContract } from '../../utils/getContract';
+import BlogCard from 'components/Cards/HomeCard.vue';
+
 export default defineComponent({
+  components: {
+    BlogCard,
+  },
   data() {
     return {
       web3: new Web3(),
