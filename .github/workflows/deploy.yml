@@ -31,7 +31,7 @@ jobs:
         env: 
           API_TOKEN_GITHUB: ${{ secrets.GH_PAGES_REPO_TOKEN }}
         with:
-          source-directory: dist/
+          source-directory: dist/spa
           destination-github-username: StellarSaber
           destination-repository-name: stellarsaber.github.io
           user-email: 20559407+ArtemisSaber@users.noreply.github.com
