@@ -1,0 +1,42 @@
+name: Deploy GH pages
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+        
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build website
+        run: yarn quasar build
+
+      - name: Deploy to external repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env: 
+          API_TOKEN_GITHUB: ${{ secrets.GH_PAGES_REPO_TOKEN }}
+        with:
+          source-directory: dist/
+          destination-github-username: StellarSaber
+          destination-repository-name: stellarsaber.github.io
+          user-email: 20559407+ArtemisSaber@users.noreply.github.com
+          target-branch: "main"
+
+      - name: Test get variable exported by push-to-another-repository
+        run: echo $DESTINATION_CLONED_DIRECTORY
+        
